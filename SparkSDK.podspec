@@ -11,6 +11,8 @@ Pod::Spec.new do |s|
   s.ios.deployment_target = "9.0"
   s.preserve_paths = 'MediaEngine/Wme.framework'
   s.xcconfig = { 'FRAMEWORK_SEARCH_PATHS' => '"$(PODS_ROOT)/SparkSDK/MediaEngine"', 'ENABLE_BITCODE' => 'NO'}
+  s.pod_target_xcconfig = { 'FRAMEWORK_SEARCH_PATHS' => '"$(PODS_ROOT)/SparkSDK/MediaEngine"', 'ENABLE_BITCODE' => 'NO'}
+  s.user_target_xcconfig = { 'FRAMEWORK_SEARCH_PATHS' => '"$(PODS_ROOT)/SparkSDK/MediaEngine"', 'ENABLE_BITCODE' => 'NO'}
   s.vendored_frameworks = "MediaEngine/Wme.framework"
   s.dependency 'Alamofire', '~> 4.0-beta'
   s.dependency 'ObjectMapper', '~> 1.3.0'
