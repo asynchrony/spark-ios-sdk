@@ -37,7 +37,7 @@ class TestUserFactory {
                        "Content-Type": "application/json"]
         
         let body: [String: Any] = ["clientId": client.id,
-                                   "clientSecret": client.secret!,
+                                   "clientSecret": client.secret,
                                    "emailTemplate": email,
                                    "displayName": userName,
                                    "password": "P@ssw0rd123",
@@ -47,7 +47,7 @@ class TestUserFactory {
         var user = TestUser()
         let semaphore = DispatchSemaphore(value: 0)
 		let queue = DispatchQueue(label: "create-user-queue")
-		Alamofire.request(testUserUrl, withMethod: .post, parameters: body, encoding: .json, headers: headers).responseJSON(queue: queue) { response in
+		Alamofire.request(testUserUrl, method: .post, parameters: body, encoding: JSONEncoding.default, headers: headers).responseJSON(queue: queue) { response in
                 switch response.result {
                 case .success:
                     if let value = response.result.value {
@@ -95,20 +95,15 @@ class TestUserFactory {
 
 private struct Client {
     let id = "Cc5ce08d6eb24526c2af47c8ad39e58db1e07d3c53cbd4c9d359a5c471344c2fb"
-    var secret: String!
-    var base64Credentials: String!
+    let secret: String
+    let base64Credentials: String
     
     init() {
-        secret = getSecret()
-        base64Credentials = getBase64Credentials()
+        secret = Client.getSecret()
+		base64Credentials = "\(id):\(secret)".data(using: String.Encoding.utf8)!.base64EncodedString(options: [])
     }
-    
-    private func getBase64Credentials() -> String {
-		let credentialData = "\(id):\(secret)".data(using: String.Encoding.utf8)!
-        return credentialData.base64EncodedString(options: [])
-    }
-    
-    private func getSecret() -> String {
+       
+    private static func getSecret() -> String {
         let envDict = ProcessInfo().environment        
         guard let secret = envDict["CLIENTSECRET"] else {
             print("Failed to get client secret from env")
@@ -120,27 +115,23 @@ private struct Client {
 }
 
 private struct AccessToken {
-    var value: String!
-    
-    private let accessTokenUrl = "https://idbroker.webex.com/idb/oauth2/v1/access_token"
-    private let client = Client()
+    let value: String
     
     init() {
-        value = getBearerAccessToken()
-    }
+        value = AccessToken.getBearerAccessToken()
+	}
     
-    private func getBearerAccessToken() -> String {
-        let headers = ["Authorization": "Basic \(client.base64Credentials)"]
-        
+    private static func getBearerAccessToken() -> String {
+		let accessTokenUrl = "https://idbroker.webex.com/idb/oauth2/v1/access_token"		
+
+		let headers = ["Authorization": "Basic \(Client().base64Credentials)"]
         let body = ["grant_type": "client_credentials",
                     "scope": "webexsquare:admin Identity:SCIM"]
-        
         var adminToken = ""
         let semaphore = DispatchSemaphore(value: 0)
 		let queue = DispatchQueue(label: "create-token-queue")
 
-		
-		Alamofire.request(accessTokenUrl, withMethod: .post, parameters: body, headers: headers).responseJSON(queue: queue) { response in
+		Alamofire.request(accessTokenUrl, method: .post, parameters: body, headers: headers).responseJSON(queue: queue) { response in
 			switch response.result {
 			case .success:
 				if let value = response.result.value {
